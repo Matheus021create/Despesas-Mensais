@@ -6,59 +6,25 @@
   <title>Controle de Despesas</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f5f6fa;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 800px;
-      margin: 50px auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #2f3640;
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; margin: 0; padding: 0; }
+    .container { max-width: 800px; margin: 50px auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2f3640; }
     input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #dcdde1;
-      border-radius: 5px;
+      width: 100%; padding: 10px; margin: 10px 0;
+      border: 1px solid #dcdde1; border-radius: 5px;
     }
     button {
-      background-color: #273c75;
-      color: white;
-      cursor: pointer;
+      background-color: #273c75; color: white; cursor: pointer;
     }
-    button:hover {
-      background-color: #192a56;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
+    button:hover { background-color: #192a56; }
+    ul { list-style: none; padding: 0; }
     li {
-      background-color: #f1f2f6;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      display: flex;
+      background-color: #f1f2f6; padding: 10px;
+      margin: 8px 0; border-radius: 5px; display: flex;
       justify-content: space-between;
     }
-    .total {
-      text-align: right;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    canvas {
-      margin-top: 40px;
-    }
+    .total { text-align: right; font-weight: bold; margin-top: 10px; }
+    canvas { margin-top: 40px; }
   </style>
 </head>
 <body>
@@ -96,9 +62,9 @@
   </div>
 
   <script>
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     let despesasPorMes = {};
     let receitaPorMes = {};
-    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
     const ctx = document.getElementById('grafico').getContext('2d');
     const grafico = new Chart(ctx, {
@@ -113,11 +79,21 @@
       },
       options: {
         responsive: true,
-        scales: {
-          y: { beginAtZero: true }
-        }
+        scales: { y: { beginAtZero: true } }
       }
     });
+
+    function salvarLocalStorage() {
+      localStorage.setItem('despesasPorMes', JSON.stringify(despesasPorMes));
+      localStorage.setItem('receitaPorMes', JSON.stringify(receitaPorMes));
+    }
+
+    function carregarLocalStorage() {
+      const despesasSalvas = localStorage.getItem('despesasPorMes');
+      const receitaSalva = localStorage.getItem('receitaPorMes');
+      if (despesasSalvas) despesasPorMes = JSON.parse(despesasSalvas);
+      if (receitaSalva) receitaPorMes = JSON.parse(receitaSalva);
+    }
 
     function adicionarDespesa() {
       const mes = document.getElementById('mes').value;
@@ -129,21 +105,20 @@
         alert("Informe o valor recebido no mês.");
         return;
       }
-
       if (!descricao || isNaN(valor) || valor <= 0) {
         alert("Preencha a descrição e valor da despesa corretamente.");
         return;
       }
 
       receitaPorMes[mes] = receitaInput;
-
       if (!despesasPorMes[mes]) despesasPorMes[mes] = [];
       despesasPorMes[mes].push({ descricao, valor });
 
+      salvarLocalStorage();
       atualizarLista();
       atualizarTotal();
       atualizarGrafico();
-      
+
       document.getElementById('descricao').value = '';
       document.getElementById('valor').value = '';
     }
@@ -174,6 +149,7 @@
 
     function removerDespesa(mes, index) {
       despesasPorMes[mes].splice(index, 1);
+      salvarLocalStorage();
       atualizarLista();
       atualizarTotal();
       atualizarGrafico();
@@ -186,13 +162,6 @@
       grafico.data.datasets[0].data = totais;
       grafico.update();
     }
-
-    document.getElementById('mes').addEventListener('change', () => {
-      const mes = document.getElementById('mes').value;
-      document.getElementById('receita').value = receitaPorMes[mes] || '';
-      atualizarLista();
-      atualizarTotal();
-    });
 
     function exportarExcel() {
       let csv = "Mês,Receita,Descrição da Despesa,Valor da Despesa\n";
@@ -214,6 +183,19 @@
       link.download = 'controle_despesas.csv';
       link.click();
     }
+
+    document.getElementById('mes').addEventListener('change', () => {
+      const mes = document.getElementById('mes').value;
+      document.getElementById('receita').value = receitaPorMes[mes] || '';
+      atualizarLista();
+      atualizarTotal();
+    });
+
+    // Inicializar
+    carregarLocalStorage();
+    atualizarLista();
+    atualizarTotal();
+    atualizarGrafico();
   </script>
 </body>
 </html>
