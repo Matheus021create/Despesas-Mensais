@@ -396,6 +396,21 @@
     atualizarLista();
     atualizarTotal();
     atualizarGrafico();
+    
+    let logoutTimer;
+
+function resetLogoutTimer() {
+  clearTimeout(logoutTimer);
+  logoutTimer = setTimeout(() => {
+    alert("Você foi desconectado por inatividade.");
+    window.location.href = "/logout";
+  }, 60000); 
+}
+document.addEventListener("mousemove", resetLogoutTimer);
+document.addEventListener("keypress", resetLogoutTimer);
+document.addEventListener("click", resetLogoutTimer);
+document.addEventListener("scroll", resetLogoutTimer);
+resetLogoutTimer();
   </script>
 </body>
 </html>
