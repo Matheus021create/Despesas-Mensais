@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login - Controle de Despesas</title>
+  <title>Cadastro de Usuário</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -71,44 +71,59 @@
 </head>
 <body>
   <div class="container">
-    <h2>Login</h2>
+    <h2>Cadastro</h2>
     <div class="error" id="errorMsg"></div>
-    <input type="text" id="usuario" placeholder="Nome ou Email" autocomplete="username" />
-    <input type="password" id="senha" placeholder="Senha" autocomplete="current-password" />
-    <button onclick="login()">Entrar</button>
+    <input type="text" id="nome" placeholder="Nome" autocomplete="name" />
+    <input type="email" id="email" placeholder="Email" autocomplete="email" />
+    <input type="password" id="senha" placeholder="Senha" autocomplete="new-password" />
+    <button onclick="cadastrar()">Cadastrar</button>
     <div class="link">
-      Não tem conta? <a href="registro.html">Cadastre-se aqui</a>
+      Já tem conta? <a href="index.html">Faça login</a>
     </div>
   </div>
 
   <script>
-    function login() {
-      const usuario = document.getElementById('usuario').value.trim().toLowerCase();
+    function cadastrar() {
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       const senha = document.getElementById('senha').value;
       const errorMsg = document.getElementById('errorMsg');
       errorMsg.style.display = 'none';
       errorMsg.textContent = '';
 
-      if (!usuario || !senha) {
+      if (!nome || !email || !senha) {
         errorMsg.textContent = "Preencha todos os campos.";
         errorMsg.style.display = 'block';
         return;
       }
 
-      let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-
-     
-      const userEncontrado = usuarios.find(u => 
-        (u.email.toLowerCase() === usuario || u.nome.toLowerCase() === usuario) && u.senha === senha
-      );
-
-      if (!userEncontrado) {
-        errorMsg.textContent = "Usuário ou senha inválidos.";
+      if (!validateEmail(email)) {
+        errorMsg.textContent = "Email inválido.";
         errorMsg.style.display = 'block';
         return;
       }
-      localStorage.setItem('loggedUser', userEncontrado.nome);
-      window.location.href = 'painel.html';
+
+      // Recupera usuários existentes
+      let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+
+      // Verifica se já existe usuário com email ou nome
+      const existe = usuarios.some(u => u.email === email || u.nome.toLowerCase() === nome.toLowerCase());
+      if (existe) {
+        errorMsg.textContent = "Usuário ou email já cadastrado.";
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      usuarios.push({ nome, email, senha });
+      localStorage.setItem('usuarios', JSON.stringify(usuarios));
+
+      alert("Cadastro realizado com sucesso! Faça login.");
+      window.location.href = "index.html";
+    }
+
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
     }
   </script>
 </body>
