@@ -3,199 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Controle de Despesas</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Login</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; margin: 0; padding: 0; }
-    .container { max-width: 800px; margin: 50px auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h1 { text-align: center; color: #2f3640; }
-    input, select, button {
-      width: 100%; padding: 10px; margin: 10px 0;
-      border: 1px solid #dcdde1; border-radius: 5px;
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f0f0f0;
+      margin: 0;
+    }
+    .login-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      width: 300px;
+      box-sizing: border-box;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
     button {
-      background-color: #273c75; color: white; cursor: pointer;
+      background: #273c75;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
     }
-    button:hover { background-color: #192a56; }
-    ul { list-style: none; padding: 0; }
-    li {
-      background-color: #f1f2f6; padding: 10px;
-      margin: 8px 0; border-radius: 5px; display: flex;
-      justify-content: space-between;
+    button:hover {
+      background: #192a56;
     }
-    .total { text-align: right; font-weight: bold; margin-top: 10px; }
-    canvas { margin-top: 40px; }
+    #mensagem {
+      color: red;
+      font-size: 0.9rem;
+      min-height: 1.2rem;
+      margin-top: 5px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Controle de Despesas</h1>
-
-    <select id="mes">
-      <option value="Janeiro">Janeiro</option>
-      <option value="Fevereiro">Fevereiro</option>
-      <option value="Março">Março</option>
-      <option value="Abril">Abril</option>
-      <option value="Maio">Maio</option>
-      <option value="Junho">Junho</option>
-      <option value="Julho">Julho</option>
-      <option value="Agosto">Agosto</option>
-      <option value="Setembro">Setembro</option>
-      <option value="Outubro">Outubro</option>
-      <option value="Novembro">Novembro</option>
-      <option value="Dezembro">Dezembro</option>
-    </select>
-
-    <input type="number" id="receita" placeholder="Valor recebido no mês (€)" />
-    <input type="text" id="descricao" placeholder="Descrição da despesa" />
-    <input type="number" id="valor" placeholder="Valor da despesa (€)" />
-    <button onclick="adicionarDespesa()">Adicionar Despesa</button>
-
-    <ul id="lista-despesas"></ul>
-
-    <div class="total">Total de Despesas: € <span id="total">0.00</span></div>
-    <div class="total">Saldo do Mês: € <span id="saldo">0.00</span></div>
-    
-    <button onclick="exportarExcel()">Exportar para Excel</button>
-
-    <canvas id="grafico" width="400" height="200"></canvas>
+  <div class="login-box">
+    <h2>Login / Cadastro</h2>
+    <input type="text" id="username" placeholder="Nome de usuário" autocomplete="username" />
+    <input type="password" id="password" placeholder="Senha" autocomplete="current-password" />
+    <button onclick="login()">Entrar</button>
+    <p id="mensagem"></p>
   </div>
 
   <script>
-    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    let despesasPorMes = {};
-    let receitaPorMes = {};
+    function login() {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value;
+      const msg = document.getElementById("mensagem");
+      msg.textContent = "";
 
-    const ctx = document.getElementById('grafico').getContext('2d');
-    const grafico = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: meses,
-        datasets: [{
-          label: 'Despesas por Mês (€)',
-          data: Array(12).fill(0),
-          backgroundColor: '#273c75'
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-
-    function salvarLocalStorage() {
-      localStorage.setItem('despesasPorMes', JSON.stringify(despesasPorMes));
-      localStorage.setItem('receitaPorMes', JSON.stringify(receitaPorMes));
-    }
-
-    function carregarLocalStorage() {
-      const despesasSalvas = localStorage.getItem('despesasPorMes');
-      const receitaSalva = localStorage.getItem('receitaPorMes');
-      if (despesasSalvas) despesasPorMes = JSON.parse(despesasSalvas);
-      if (receitaSalva) receitaPorMes = JSON.parse(receitaSalva);
-    }
-
-    function adicionarDespesa() {
-      const mes = document.getElementById('mes').value;
-      const receitaInput = parseFloat(document.getElementById('receita').value);
-      const descricao = document.getElementById('descricao').value;
-      const valor = parseFloat(document.getElementById('valor').value);
-
-      if (isNaN(receitaInput) || receitaInput <= 0) {
-        alert("Informe o valor recebido no mês.");
-        return;
-      }
-      if (!descricao || isNaN(valor) || valor <= 0) {
-        alert("Preencha a descrição e valor da despesa corretamente.");
+      if (!user || !pass) {
+        msg.textContent = "Preencha usuário e senha!";
         return;
       }
 
-      receitaPorMes[mes] = receitaInput;
-      if (!despesasPorMes[mes]) despesasPorMes[mes] = [];
-      despesasPorMes[mes].push({ descricao, valor });
+      const key = "user_" + user;
+      const storedPass = localStorage.getItem(key);
 
-      salvarLocalStorage();
-      atualizarLista();
-      atualizarTotal();
-      atualizarGrafico();
-
-      document.getElementById('descricao').value = '';
-      document.getElementById('valor').value = '';
-    }
-
-    function atualizarLista() {
-      const lista = document.getElementById('lista-despesas');
-      lista.innerHTML = '';
-      const mes = document.getElementById('mes').value;
-      if (!despesasPorMes[mes]) return;
-
-      despesasPorMes[mes].forEach((item, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${item.descricao} - € ${item.valor.toFixed(2)}
-          <button onclick="removerDespesa('${mes}', ${index})" style="background:red;color:white;border:none;padding:5px;">X</button>`;
-        lista.appendChild(li);
-      });
-    }
-
-    function atualizarTotal() {
-      const mes = document.getElementById('mes').value;
-      const total = despesasPorMes[mes]?.reduce((acc, cur) => acc + cur.valor, 0) || 0;
-      const receita = receitaPorMes[mes] || 0;
-      const saldo = receita - total;
-
-      document.getElementById('total').textContent = total.toFixed(2);
-      document.getElementById('saldo').textContent = saldo.toFixed(2);
-    }
-
-    function removerDespesa(mes, index) {
-      despesasPorMes[mes].splice(index, 1);
-      salvarLocalStorage();
-      atualizarLista();
-      atualizarTotal();
-      atualizarGrafico();
-    }
-
-    function atualizarGrafico() {
-      const totais = meses.map(mes =>
-        despesasPorMes[mes]?.reduce((acc, cur) => acc + cur.valor, 0) || 0
-      );
-      grafico.data.datasets[0].data = totais;
-      grafico.update();
-    }
-
-    function exportarExcel() {
-      let csv = "Mês,Receita,Descrição da Despesa,Valor da Despesa\n";
-      for (const mes of meses) {
-        const receita = receitaPorMes[mes] || 0;
-        const despesas = despesasPorMes[mes] || [];
-        if (despesas.length === 0) {
-          csv += `${mes},${receita.toFixed(2)},,\n`;
-        } else {
-          despesas.forEach(item => {
-            csv += `${mes},${receita.toFixed(2)},${item.descricao},${item.valor.toFixed(2)}\n`;
-          });
-        }
+      if (!storedPass) {
+        // Cadastro novo usuário
+        localStorage.setItem(key, pass);
+        localStorage.setItem("loggedUser", user);
+        window.location.href = "painel.html";
+      } else if (storedPass === pass) {
+        // Login ok
+        localStorage.setItem("loggedUser", user);
+        window.location.href = "painel.html";
+      } else {
+        msg.textContent = "Senha incorreta!";
       }
-
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'controle_despesas.csv';
-      link.click();
     }
-
-    document.getElementById('mes').addEventListener('change', () => {
-      const mes = document.getElementById('mes').value;
-      document.getElementById('receita').value = receitaPorMes[mes] || '';
-      atualizarLista();
-      atualizarTotal();
-    });
-
-    // Inicializar
-    carregarLocalStorage();
-    atualizarLista();
-    atualizarTotal();
-    atualizarGrafico();
   </script>
 </body>
 </html>
